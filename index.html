@@ -30,32 +30,39 @@
     /* ---------- CSS DEL EMBED MAILERLITE ---------- */
     /* pegado tal cual, solo recortado a lo esencial para campos y botón */
     /* Loader, inputs, botón, etc. */
-    .ml-form-embedSubmitLoad{display:inline-block;width:20px;height:20px}
-    .ml-form-embedSubmitLoad:after{content:" ";display:block;width:11px;height:11px;margin:1px;border-radius:50%;border:4px solid #fff;border-color:#fff #fff #fff transparent;animation:ml-spin 1.2s linear infinite}
-    @keyframes ml-spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-
-    #mlb2-29584535.ml-form-embedContainer{width:100%!important}
-    #mlb2-29584535 .ml-form-embedWrapper{max-width:100%!important;width:100%!important;background:transparent;border:none;padding:0}
-    #mlb2-29584535 input{width:100%!important;font-size:14px;padding:10px;border:1px solid #ccc;border-radius:4px;margin-bottom:12px}
-    #mlb2-29584535 button.primary{background:#000;border:none;color:#fff;font-weight:700;padding:10px;border-radius:4px;width:100%}
-    #mlb2-29584535 button.primary:hover{background:#333}
-    #mlb2-29584535 .ml-form-checkboxRow{margin-bottom:12px}
-    #mlb2-29584535 .ml-form-checkboxRow label{font-size:14px}
-    /* fin tweaks */
-
-    #mlb2-29584535 .ml-form-checkboxRow{
-  display:flex;          /* pone input y texto en la misma línea */
-  align-items:center;
-  gap:8px;               /* espacio entre el cuadrito y el texto */
-  margin-bottom:12px;
+  /* loader */
+.ml-form-embedSubmitLoad{
+  display:inline-block;width:20px;height:20px
 }
-#mlb2-29584535 .ml-form-checkboxRow input{margin:0;}
+.ml-form-embedSubmitLoad:after{
+  content:" ";display:block;width:11px;height:11px;margin:1px;border-radius:50%;
+  border:4px solid #fff;border-color:#fff #fff #fff transparent;animation:ml-spin 1.2s linear infinite
+}
+@keyframes ml-spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+/* base */
+#mlb2-29584535.ml-form-embedContainer{width:100%!important}
+#mlb2-29584535 .ml-form-embedWrapper{
+  max-width:100%!important;width:100%!important;background:transparent;border:none;padding:0
+}
+#mlb2-29584535 input:not([type="checkbox"]){
+  width:100%!important;font-size:14px;padding:10px;border:1px solid #ccc;border-radius:4px;margin-bottom:12px
+}
+#mlb2-29584535 button.primary{
+  background:#000;border:none;color:#fff;font-weight:700;padding:10px;border-radius:4px;width:100%
+}
+#mlb2-29584535 button.primary:hover{background:#333}
+
+/* checkbox row */
+#mlb2-29584535 .ml-form-checkboxRow{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px
+}
+#mlb2-29584535 .ml-form-checkboxRow input[type="checkbox"]{
+  width:16px!important;height:16px!important;flex:0 0 16px;margin:0
+}
 #mlb2-29584535 .ml-form-checkboxRow .label-description{
-  display:inline-block;
-  margin:0;
-  font-size:14px;
+  display:inline-block;font-size:14px;margin:0
 }
-
   </style>
 </head>
 <body>
