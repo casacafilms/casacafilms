@@ -43,7 +43,6 @@
     .choice { margin-top: 8px; padding: 10px 12px; background: rgba(255, 200, 87, 0.08); border: 1px solid rgba(255, 200, 87, 0.35); border-radius: 10px; color: #ffe6a6; display: none; }
     .small { font-size: 14px; color: var(--muted); }
     .foot { margin-top: 18px; font-size: 13px; color: var(--muted); opacity: 0.9; }
-    code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
 
     form { margin-top: 14px; display: none; }
     label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 6px; }
@@ -91,7 +90,6 @@
       const params = new URLSearchParams(window.location.search);
       const vot = params.get('vot') || params.get('vote') || params.get('option');
 
-      // Map options to readable labels — adjust if you change the poll
       const labels = {
         '1': 'Video Editing in Premiere Pro',
         '2': 'Video Editing in DaVinci Resolve',
@@ -107,61 +105,50 @@
       const statusEl = document.getElementById('status');
       const sendBtn = document.getElementById('send');
 
-      // Show picked option
       if (vot) {
         const label = labels[String(vot)] || ('Option ' + String(vot));
         choiceEl.textContent = 'You picked: ' + label;
         choiceEl.style.display = 'block';
       }
 
-      // Show Q&A form only for vot=7
       const isQA = String(vot) === '7';
       if (isQA) {
         formEl.style.display = 'block';
       }
 
-      // Optional: remove query params after rendering (keeps URL clean while ML still logged the click)
       if (window.history && window.history.replaceState) {
         const clean = window.location.origin + window.location.pathname;
         window.history.replaceState({}, document.title, clean);
       }
 
-      // Submission to Google Apps Script Web App (no preflight)
       const ENDPOINT = 'https://script.google.com/macros/s/AKfycby_T8-Rd02bHhxnGTqu2JLrhzU1KkYyznqRy6JABYAEKN_CZ87pSqxtPdbf5a7rVPc/exec';
 
-      formEl?.addEventListener('submit', async (e) => {
+      formEl?.addEventListener('submit', (e) => {
         e.preventDefault();
-        statusEl.textContent = '';
         const question = document.getElementById('question').value.trim();
         if (!question) {
           statusEl.textContent = 'Please write a question first.';
           statusEl.className = 'small err';
           return;
         }
+
+        // Show success immediately (fire-and-forget). The Sheet write happens in the background.
+        statusEl.textContent = 'Saved. Thanks for your question!';
+        statusEl.className = 'small ok';
         sendBtn.disabled = true;
-        statusEl.textContent = 'Sending…';
-        statusEl.className = 'small';
 
-        const payload = {
-          vote: vot || null,
-          label: labels[String(vot)] || null,
-          question,
-          ua: navigator.userAgent,
-          ts: new Date().toISOString()
-        };
-
+        const payload = { question };
         try {
-          const res = await fetch(ENDPOINT, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-          statusEl.textContent = 'Saved. Thanks for your question!';
-          statusEl.className = 'small ok';
-          formEl.reset();
-        } catch (err) {
-          console.error(err);
-          statusEl.textContent = 'Couldn’t save right now. Please try again later.';
-          statusEl.className = 'small err';
-        } finally {
-          sendBtn.disabled = false;
-        }
+          fetch(ENDPOINT, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+        } catch (_) { /* ignore */ }
+
+        formEl.reset();
+        setTimeout(() => { sendBtn.disabled = false; }, 600);
       });
     })();
   </script>
