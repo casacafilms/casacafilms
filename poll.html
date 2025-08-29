@@ -51,9 +51,9 @@
     label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 6px; }
     input, textarea { width: 100%; background: #0f0f12; color: var(--text); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 12px; font: inherit; }
     textarea { min-height: 120px; resize: vertical; }
-    .row { display: grid; grid-template-columns: 1fr 160px; gap: 10px; }
-    .actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-    .submit { background: #1e1e24; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; }
+    .row { display: none; }
+    .actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+    .submit { background: var(--accent); color: #131313; border: 1px solid rgba(0,0,0,0.2); cursor: pointer; padding: 12px 16px; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
     .submit[disabled] { opacity: 0.6; cursor: not-allowed; }
     .ok { color: var(--ok); }
     .err { color: var(--err); }
@@ -78,16 +78,10 @@
     <!-- Q&A form (shown only when vot=7) -->
     <form id="qa-form" autocomplete="on" novalidate>
       <label for="question">Your question</label>
-      <textarea id="question" name="question" placeholder="Ask me anything about live workflows, PTZ, color, audio, solo-operator flow…" required></textarea>
+      <textarea id="question" name="question" placeholder="Ask me anything about live workflows, PTZ, color, audio, solo-operator flow…" required autofocus></textarea>
 
-      <div class="row">
-        <div>
-          <label for="email">Your email (optional, to reply)</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com" />
-        </div>
-        <div class="actions">
-          <button class="submit" id="send" type="submit">Send question</button>
-        </div>
+      <div class="actions">
+        <button class="submit" id="send" type="submit">Send question</button>
       </div>
 
       <p id="status" class="small" role="status"></p>
@@ -118,52 +112,14 @@
       const statusEl = document.getElementById('status');
       const sendBtn = document.getElementById('send');
 
-      // Show picked option
-      if (vot) {
-        const label = labels[String(vot)] || ('Option ' + String(vot));
-        choiceEl.textContent = 'You picked: ' + label;
-        choiceEl.style.display = 'block';
-      }
-
-      // Show Q&A form only for vot=7
-      const isQA = String(vot) === '7';
-      if (isQA) {
-        formEl.style.display = 'block';
-      }
-
-      // Optional: remove query params after rendering (keeps URL clean while ML still logged the click)
-      if (window.history && window.history.replaceState) {
-        const clean = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, document.title, clean);
-      }
-
-      // --- Submission to Google Apps Script Web App ---
-      // 1) Replace with your deployed Web App URL below
-      const ENDPOINT = 'https://script.google.com/macros/s/AKfycby_T8-Rd02bHhxnGTqu2JLrhzU1KkYyznqRy6JABYAEKN_CZ87pSqxtPdbf5a7rVPc/exec';
-      // 2) We purposely send Content-Type: text/plain to avoid CORS preflight
-
+      // Submit to Google Apps Script Web App
       formEl?.addEventListener('submit', async (e) => {
         e.preventDefault();
         statusEl.textContent = '';
         const question = document.getElementById('question').value.trim();
-        const email = document.getElementById('email').value.trim();
         if (!question) {
           statusEl.textContent = 'Please write a question first.';
-          statusEl.className = 'small err';
-          return;
-        }
-        sendBtn.disabled = true;
-        statusEl.textContent = 'Sending…';
-        statusEl.className = 'small';
-
-        const payload = {
-          vote: vot || null,
-          label: labels[String(vot)] || null,
-          question,
-          email: email || null,
-          ua: navigator.userAgent,
-          ts: new Date().toISOString()
-        };
+          statusEl.classN
 
         try {
           const res = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
