@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Thanks for your vote — Casaca Films</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    :root {
+      --bg: #0b0b0c;
+      --card: #141416;
+      --text: #f6f7f9;
+      --muted: #b6bbc6;
+      --accent: #ffc857; /* subtle gold */
+      --ok: #22c55e;
+      --err: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 80% -10%, #1b1b20 0%, var(--bg) 60%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 640px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+    }
+    .logo { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 600; letter-spacing: 0.3px; }
+    .check { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; margin: 8px 0 16px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35); }
+    h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+    p { margin: 0 0 10px; color: var(--muted); }
+    .choice { margin-top: 8px; padding: 10px 12px; background: rgba(255, 200, 87, 0.08); border: 1px solid rgba(255, 200, 87, 0.35); border-radius: 10px; color: #ffe6a6; display: none; }
+    .small { font-size: 14px; color: var(--muted); }
+    .foot { margin-top: 18px; font-size: 13px; color: var(--muted); opacity: 0.9; }
+    .btn { display: inline-block; margin-top: 14px; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); text-decoration: none; color: var(--text); transition: 150ms ease; background: #1b1b1f; }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.24); }
+    code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
+
+    form { margin-top: 14px; display: none; }
+    label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 6px; }
+    input, textarea { width: 100%; background: #0f0f12; color: var(--text); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 12px; font: inherit; }
+    textarea { min-height: 120px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 160px; gap: 10px; }
+    .actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .submit { background: #1e1e24; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; }
+    .submit[disabled] { opacity: 0.6; cursor: not-allowed; }
+    .ok { color: var(--ok); }
+    .err { color: var(--err); }
+  </style>
+</head>
+<body>
+  <main class="card" aria-live="polite">
+    <a class="logo" href="#" aria-label="Casaca Films">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7.5h14.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".7"/><path d="M3 12h18" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M3 16.5h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".7"/></svg>
+      Casaca Films
+    </a>
+
+    <div class="check" role="img" aria-label="Vote recorded">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ok)"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+
+    <h1>Thanks for your vote!</h1>
+    <p>Your choice was recorded. We’ll share results in the next Friday email.</p>
+
+    <div id="choice" class="choice"></div>
+
+    <!-- Q&A form (shown only when vot=7) -->
+    <form id="qa-form" autocomplete="on" novalidate>
+      <label for="question">Your question</label>
+      <textarea id="question" name="question" placeholder="Ask me anything about live workflows, PTZ, color, audio, solo-operator flow…" required></textarea>
+
+      <div class="row">
+        <div>
+          <label for="email">Your email (optional, to reply)</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="actions">
+          <button class="submit" id="send" type="submit">Send question</button>
+        </div>
+      </div>
+
+      <p id="status" class="small" role="status"></p>
+      <p class="small">We’ll only use your question to plan the live. No spam, no resale.</p>
+    </form>
+
+    <p class="foot">If you got here by mistake, no worries — you’re all good.</p>
+  </main>
+
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const vot = params.get('vot') || params.get('vote') || params.get('option');
+
+      // Map options to readable labels — adjust if you change the poll
+      const labels = {
+        '1': 'Video Editing in Premiere Pro',
+        '2': 'Video Editing in DaVinci Resolve',
+        '3': 'Color Grading in DaVinci Resolve',
+        '4': 'Blackmagic Camera App (iPhone or Camera)',
+        '5': 'My Full Creative Process (1 video, end to end)',
+        '6': 'How to Film Yourself (Solo Creator flow)',
+        '7': 'Open Q&A (send me anything)'
+      };
+
+      const choiceEl = document.getElementById('choice');
+      const formEl = document.getElementById('qa-form');
+      const statusEl = document.getElementById('status');
+      const sendBtn = document.getElementById('send');
+
+      // Show picked option
+      if (vot) {
+        const label = labels[String(vot)] || ('Option ' + String(vot));
+        choiceEl.textContent = 'You picked: ' + label;
+        choiceEl.style.display = 'block';
+      }
+
+      // Show Q&A form only for vot=7
+      const isQA = String(vot) === '7';
+      if (isQA) {
+        formEl.style.display = 'block';
+      }
+
+      // Optional: remove query params after rendering (keeps URL clean while ML still logged the click)
+      if (window.history && window.history.replaceState) {
+        const clean = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, clean);
+      }
+
+      // --- Submission to Google Apps Script Web App ---
+      // 1) Replace with your deployed Web App URL below
+      const ENDPOINT = 'https://script.google.com/macros/s/AKfycby_T8-Rd02bHhxnGTqu2JLrhzU1KkYyznqRy6JABYAEKN_CZ87pSqxtPdbf5a7rVPc/exec';
+      // 2) We purposely send Content-Type: text/plain to avoid CORS preflight
+
+      formEl?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusEl.textContent = '';
+        const question = document.getElementById('question').value.trim();
+        const email = document.getElementById('email').value.trim();
+        if (!question) {
+          statusEl.textContent = 'Please write a question first.';
+          statusEl.className = 'small err';
+          return;
+        }
+        sendBtn.disabled = true;
+        statusEl.textContent = 'Sending…';
+        statusEl.className = 'small';
+
+        const payload = {
+          vote: vot || null,
+          label: labels[String(vot)] || null,
+          question,
+          email: email || null,
+          ua: navigator.userAgent,
+          ts: new Date().toISOString()
+        };
+
+        try {
+          const res = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+          if (!res.ok) throw new Error('Bad status ' + res.status);
+          await res.text();
+          statusEl.textContent = 'Saved. Thanks for your question!';
+          statusEl.className = 'small ok';
+          formEl.reset();
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = 'Couldn\'t save right now. Please try again later or email hello@casacafilms.com';
+          statusEl.className = 'small err';
+        } finally {
+          sendBtn.disabled = false;
+        }
+      });
+    })();
+  </script>
+
+  <noscript>
+    <p class="small">Your vote was received. (Enable JavaScript to see your chosen option.)</p>
+  </noscript>
+</body>
+</html>
