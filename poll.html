@@ -43,17 +43,14 @@
     .choice { margin-top: 8px; padding: 10px 12px; background: rgba(255, 200, 87, 0.08); border: 1px solid rgba(255, 200, 87, 0.35); border-radius: 10px; color: #ffe6a6; display: none; }
     .small { font-size: 14px; color: var(--muted); }
     .foot { margin-top: 18px; font-size: 13px; color: var(--muted); opacity: 0.9; }
-    .btn { display: inline-block; margin-top: 14px; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); text-decoration: none; color: var(--text); transition: 150ms ease; background: #1b1b1f; }
-    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.24); }
     code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
 
     form { margin-top: 14px; display: none; }
     label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 6px; }
-    input, textarea { width: 100%; background: #0f0f12; color: var(--text); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 12px; font: inherit; }
-    textarea { min-height: 120px; resize: vertical; }
-    .row { display: none; }
+    textarea { width: 100%; min-height: 120px; resize: vertical; background: #0f0f12; color: var(--text); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 12px; font: inherit; }
     .actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-    .submit { background: var(--accent); color: #131313; border: 1px solid rgba(0,0,0,0.2); cursor: pointer; padding: 12px 16px; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+    .submit { background: var(--accent); color: #111; border: 1px solid rgba(0,0,0,0.25); cursor: pointer; padding: 12px 16px; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+    .submit:hover { filter: brightness(1.05); transform: translateY(-1px); }
     .submit[disabled] { opacity: 0.6; cursor: not-allowed; }
     .ok { color: var(--ok); }
     .err { color: var(--err); }
@@ -79,11 +76,9 @@
     <form id="qa-form" autocomplete="on" novalidate>
       <label for="question">Your question</label>
       <textarea id="question" name="question" placeholder="Ask me anything about live workflows, PTZ, color, audio, solo-operator flow…" required autofocus></textarea>
-
       <div class="actions">
         <button class="submit" id="send" type="submit">Send question</button>
       </div>
-
       <p id="status" class="small" role="status"></p>
       <p class="small">We’ll only use your question to plan the live. No spam, no resale.</p>
     </form>
@@ -112,14 +107,48 @@
       const statusEl = document.getElementById('status');
       const sendBtn = document.getElementById('send');
 
-      // Submit to Google Apps Script Web App
+      // Show picked option
+      if (vot) {
+        const label = labels[String(vot)] || ('Option ' + String(vot));
+        choiceEl.textContent = 'You picked: ' + label;
+        choiceEl.style.display = 'block';
+      }
+
+      // Show Q&A form only for vot=7
+      const isQA = String(vot) === '7';
+      if (isQA) {
+        formEl.style.display = 'block';
+      }
+
+      // Optional: remove query params after rendering (keeps URL clean while ML still logged the click)
+      if (window.history && window.history.replaceState) {
+        const clean = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, clean);
+      }
+
+      // Submission to Google Apps Script Web App (no preflight)
+      const ENDPOINT = 'https://script.google.com/macros/s/AKfycby_T8-Rd02bHhxnGTqu2JLrhzU1KkYyznqRy6JABYAEKN_CZ87pSqxtPdbf5a7rVPc/exec';
+
       formEl?.addEventListener('submit', async (e) => {
         e.preventDefault();
         statusEl.textContent = '';
         const question = document.getElementById('question').value.trim();
         if (!question) {
           statusEl.textContent = 'Please write a question first.';
-          statusEl.classN
+          statusEl.className = 'small err';
+          return;
+        }
+        sendBtn.disabled = true;
+        statusEl.textContent = 'Sending…';
+        statusEl.className = 'small';
+
+        const payload = {
+          vote: vot || null,
+          label: labels[String(vot)] || null,
+          question,
+          ua: navigator.userAgent,
+          ts: new Date().toISOString()
+        };
 
         try {
           const res = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
@@ -130,7 +159,7 @@
           formEl.reset();
         } catch (err) {
           console.error(err);
-          statusEl.textContent = 'Couldn\'t save right now. Please try again later or email hello@casacafilms.com';
+          statusEl.textContent = 'Couldn’t save right now. Please try again later.';
           statusEl.className = 'small err';
         } finally {
           sendBtn.disabled = false;
